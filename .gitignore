@@ -1,0 +1,24 @@
+# Python/Django
+*.pyc
+*.pyo
+__pycache__
+*.so
+*.egg-info
+dist
+.vscode
+*.sqlite3
+.idea/
+# Virtual environment
+.venv/
+venv/
+
+# Logs and databases
+log/
+db.sqlite3
+
+# Docker
+.env
+.dockerignore
+
+
+media/

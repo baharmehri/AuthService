@@ -1,0 +1,8 @@
+keyring
+Django
+psycopg
+#psycopg2
+psycopg2-binary
+djangorestframework-simplejwt==5.2.2
+djangorestframework
+python-dotenv
