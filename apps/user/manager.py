@@ -17,6 +17,7 @@ class CustomUserManager(BaseUserManager):
         kwargs.setdefault('is_staff', True)
         kwargs.setdefault('is_superuser', True)
         kwargs.setdefault('is_active', True)
+        kwargs.setdefault('is_admin', True)
 
         if kwargs.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
