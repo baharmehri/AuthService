@@ -11,7 +11,7 @@ services:
     env_file:
       - .env
     networks:
-      - graf_network
+      - test_network
 
   django:
     build:
@@ -27,7 +27,7 @@ services:
     depends_on:
       - db
     networks:
-      - graf_network
+      - test_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -38,7 +38,7 @@ services:
     depends_on:
       - db
 networks:
-  graf_network:
+  test_network:
 
 volumes:
   db_data_2:
