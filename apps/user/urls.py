@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from django.urls import path
 
-from apps.user.views import UsersRegister , UserView
+from apps.user.views import UsersRegister, UserView
 
 urlpatterns = [
     path('login', TokenObtainPairView.as_view(), name='token-obtain-pair'),
