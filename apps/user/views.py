@@ -88,6 +88,14 @@ class UsersRegister(APIView):
 
 
 class VerifyUserView(APIView):
+    @extend_schema(
+        responses={
+            200: "User verify successfully.",
+            400: "Malformed request or missing required parameters.",
+            500: "An unexpected error occurred."
+        },
+        summary="Verify user by token."
+    )
     def get(self, request, token):
         redis_connection = get_redis_connection()
         user_id = redis_connection.get(token.encode('utf-8'))
