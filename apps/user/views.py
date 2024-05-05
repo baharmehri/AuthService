@@ -1,9 +1,17 @@
+import redis
+
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.reverse import reverse
 from drf_spectacular.utils import extend_schema
 
+from config import settings
+from apps.utils.redis import get_redis_connection
 from .serializers import CreateUserInputSerializer, CreateUserOutputSerializer, UserOutputSerializer, \
     UserInputUpdateSerializer
 from .models import CustomUser
@@ -13,6 +21,21 @@ from .services import update_user_info
 
 
 class UsersRegister(APIView):
+    def send_verification_email(self, token, user):
+        verification_link = reverse('verify_user', args=[token])
+
+        subject = 'Verify your account'
+        message = f'Please click on the link to verify your account:\n http://base.com{verification_link}'
+        email_from = settings.EMAIL_HOST_USER
+        recipient_list = [user.email, ]
+        send_mail(subject, message, email_from, recipient_list)
+
+    def generate_token(self, user):
+        token = get_random_string(length=32)
+        redis_connection = get_redis_connection()
+        redis_connection.set(user.pk, token, ex=60 * 5)
+        return token
+
     @extend_schema(
         request=CreateUserInputSerializer,
         responses={
@@ -27,13 +50,11 @@ class UsersRegister(APIView):
         **Parameters:**
         - `email` (string, required): The email address of the user.
         - `password` (string, required): The password for the user.
-        - `is_admin` (boolean, optional): Indicates whether the user is an administrator. Default is `false`.
 
         **Request Body:**
         This route expects a JSON object containing the following properties:
         - `email` (string, required): The email address of the user.
         - `password` (string, required): The password for the user.
-        - `is_admin` (boolean, optional): Indicates whether the user is an administrator. Default is `false`.
 
         **Response:**
         - 201 Created: The user was created successfully.
@@ -47,16 +68,25 @@ class UsersRegister(APIView):
         try:
             user = CustomUser.objects.create_user(email=serializers.validated_data['email'],
                                                   password=serializers.validated_data['password'],
-                                                  is_admin=serializers.validated_data.get('is_admin', False)
+                                                  is_active=False
                                                   )
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        try:
+            token = self.generate_token(user)
+            self.send_verification_email(token, user)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return CustomResponse.data_response(
-            data=CreateUserOutputSerializer(user, context={'request': request}).data,
-            message="User created successfully",
+            CreateUserOutputSerializer(user, context={'request': request}).data,
+            "User created successfully , need to verify.",
             status=status.HTTP_201_CREATED
         )
+
+
+class VerifyUserView(APIView):
+    def get(self, request, token):
+        pass
 
 
 class UserView(APIView):

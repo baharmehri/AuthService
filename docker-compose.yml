@@ -37,6 +37,15 @@ services:
       - .env
     depends_on:
       - db
+
+  redis:
+    image: redis:latest
+    ports:
+      - '6379:6379'
+    volumes:
+      - db_data_2:/data
+    command: redis-server --appendonly yes
+
 networks:
   test_network:
 

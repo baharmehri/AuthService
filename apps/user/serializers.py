@@ -6,13 +6,12 @@ from .models import CustomUser
 class CreateUserInputSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(max_length=255, required=True)
-    is_admin = serializers.BooleanField(required=False, allow_null=True)
 
 
 class CreateUserOutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ("email")
+        fields = "__all__"
 
 
 class UserOutputSerializer(serializers.ModelSerializer):

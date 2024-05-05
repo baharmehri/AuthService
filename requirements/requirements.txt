@@ -7,3 +7,5 @@ djangorestframework-simplejwt==5.2.2
 djangorestframework
 python-dotenv
 drf_spectacular
+redis
+django-redis
