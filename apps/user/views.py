@@ -2,7 +2,7 @@ import redis
 
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-
+from django.db.utils import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ from .serializers import CreateUserInputSerializer, CreateUserOutputSerializer, 
 from .models import CustomUser
 
 from apps.core.response import CustomResponse
-from .services import update_user_info
+from .services import update_user_info, active_user
 
 
 class UsersRegister(APIView):
@@ -33,7 +33,7 @@ class UsersRegister(APIView):
     def generate_token(self, user):
         token = get_random_string(length=32)
         redis_connection = get_redis_connection()
-        redis_connection.set(user.pk, token, ex=60 * 5)
+        redis_connection.set(token, user.pk, ex=60 * 5)
         return token
 
     @extend_schema(
@@ -70,6 +70,9 @@ class UsersRegister(APIView):
                                                   password=serializers.validated_data['password'],
                                                   is_active=False
                                                   )
+        except IntegrityError:
+            user = CustomUser.objects.get(email=serializers.validated_data['email'])
+            pass
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -86,7 +89,20 @@ class UsersRegister(APIView):
 
 class VerifyUserView(APIView):
     def get(self, request, token):
-        pass
+        redis_connection = get_redis_connection()
+        user_id = redis_connection.get(token.encode('utf-8'))
+        if user_id is None:
+            return Response({'error': "Token expired. try again."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            user = active_user(CustomUser.objects.get(pk=user_id))
+            redis_connection.delete(token.encode('utf-8'))
+        except CustomUser.DoesNotExist:
+            return Response({'error': "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return CustomResponse.data_response(UserOutputSerializer(user, context={'request': request}).data,
+                                            "User activated.",
+                                            status=status.HTTP_200_OK)
 
 
 class UserView(APIView):

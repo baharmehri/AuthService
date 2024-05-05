@@ -11,3 +11,9 @@ def update_user_info(user: CustomUser, username=None, first_name=None, last_name
 
     user.save()
     return user
+
+
+def active_user(user: CustomUser):
+    user.is_active = True
+    user.save()
+    return user
