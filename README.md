@@ -1,4 +1,4 @@
-# BaseDjango
+# Login
 This project provides a foundational application with user authentication and PostgreSQL integration. Currently under development, it offers a Docker Compose setup for easy local testing.
 
 # Features

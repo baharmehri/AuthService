@@ -11,13 +11,16 @@ services:
     env_file:
       - .env
     networks:
-      - test_network
+      - login_network
 
   django:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: python manage.py runserver 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
@@ -27,7 +30,7 @@ services:
     depends_on:
       - db
     networks:
-      - test_network
+      - login_network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -47,7 +50,7 @@ services:
     command: redis-server --appendonly yes
 
 networks:
-  test_network:
+  login_network:
 
 volumes:
   db_data_2:
