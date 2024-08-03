@@ -13,7 +13,7 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, email, password, **kwargs):
+    def create_superuser(self, number, password, **kwargs):
         kwargs.setdefault('is_staff', True)
         kwargs.setdefault('is_superuser', True)
         kwargs.setdefault('is_active', True)
@@ -27,4 +27,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_active=True.')
         if kwargs.get('is_admin') is not True:
             raise ValueError('Superuser must have is_admin=True.')
-        return self.create_user(email, password, **kwargs)
+        return self.create_user(number, password, **kwargs)
