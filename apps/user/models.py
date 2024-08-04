@@ -5,10 +5,10 @@ from .manager import CustomUserManager
 
 # Create your models here.
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     number = models.CharField(unique=True, max_length=11)
     is_admin = models.BooleanField(default=False)
-    verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     USERNAME_FIELD = 'number'
 
     objects = CustomUserManager()

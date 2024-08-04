@@ -1,8 +1,9 @@
 import random
 from django.contrib.auth import authenticate
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from apps.utils.redis import get_redis_connection
 from apps.repositories.user_repositories import UserRepository
+from apps.core.exceptions import UserPassInvalid, NumberInvalid
 
 
 class UserServices:
@@ -21,6 +22,21 @@ class UserServices:
     def user_authentication(number, password):
         return authenticate(number=number, password=password)
 
+    def login_user(self, number, password):
+        user = UserRepository.check_user_exists(number)
+        if user is None:
+            raise NumberInvalid
+        user = self.user_authentication(number, password)
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
+        else:
+            # todo:check limit
+            raise UserPassInvalid
+
     def check_number_status(self, number):
         user = UserRepository.check_user_exists(number)
         if user and user.verified:
@@ -29,7 +45,7 @@ class UserServices:
             self.otp.generate_otp_login(number)
             return False
         else:
-            account = UserRepository.insert_user_not_verified(number)
+            UserRepository.insert_user_not_verified(number)
             self.otp.generate_otp_login(number)
             return False
 
