@@ -3,9 +3,9 @@ from rest_framework_simplejwt.views import (
 )
 from django.urls import path
 
-from apps.user.views import LoginView
+from apps.user.views import NumberStatusView
 
 urlpatterns = [
-    path('login', LoginView.as_view(), name='login'),
+    path('check-number', NumberStatusView.as_view(), name='check-number'),
     path('token/refresh', TokenRefreshView.as_view(), name='token-refresh'),
 ]
