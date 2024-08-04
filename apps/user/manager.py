@@ -2,11 +2,13 @@ from django.contrib.auth.models import BaseUserManager
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, number, is_active=True, is_admin=False, verified=False, **kwargs):
+    def create_user(self, number, password=None, is_active=True, is_admin=False, is_verified=False, **kwargs):
         if not number:
             raise ValueError("Users must have an number")
 
-        user = self.model(is_active=is_active, number=number, is_admin=is_admin, verified=verified, **kwargs)
+        user = self.model(is_active=is_active, number=number, is_admin=is_admin, is_verified=is_verified, **kwargs)
+        if password:
+            user.set_password(password)
         user.save()
         return user
 
@@ -15,7 +17,7 @@ class CustomUserManager(BaseUserManager):
         kwargs.setdefault('is_superuser', True)
         kwargs.setdefault('is_active', True)
         kwargs.setdefault('is_admin', True)
-        kwargs.setdefault('verified', True)
+        kwargs.setdefault('is_verified', True)
 
         if kwargs.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -25,6 +27,6 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_active=True.')
         if kwargs.get('is_admin') is not True:
             raise ValueError('Superuser must have is_admin=True.')
-        if kwargs.get('verified') is not True:
-            raise ValueError('Superuser must have verified=True.')
+        if kwargs.get('is_verified') is not True:
+            raise ValueError('Superuser must have is_verified=True.')
         return self.create_user(number, password, **kwargs)
