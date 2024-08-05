@@ -1,45 +1,52 @@
 import random
 import datetime
+
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from apps.repositories.user_repositories import UserRepository
+
+from apps.repositories.user_repositories import UserRepository as UserRepo
 from apps.core.exceptions import UserPassInvalid, NumberInvalid, OTPInvalid
 from apps.user.redis import OTPRedis
+from apps.user.models import CustomUser
 
 
 class UserServices:
     def __init__(self):
         self.otp = OTPServices()
-        self.user_repo = UserRepository()
 
     @staticmethod
     def user_authentication(number, password):
         return authenticate(number=number, password=password)
 
+    @staticmethod
+    def get_tokens(user: CustomUser):
+        refresh = RefreshToken.for_user(user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
     def login_user(self, number, password):
-        user = self.user_repo.check_user_exists(number)
+        user = UserRepo.check_user_exists(number)
         if user is None:
             raise NumberInvalid
         user = self.user_authentication(number, password)
         if user:
-            refresh = RefreshToken.for_user(user)
-            return {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
+            tokens = self.get_tokens(user)
+            return tokens
         else:
             # todo:check limit
             raise UserPassInvalid
 
     def check_number_status(self, number):
-        user = self.user_repo.check_user_exists(number)
+        user = UserRepo.check_user_exists(number)
         if user and user.is_verified:
             return True
         elif user and user.is_verified is False:
             self.otp.generate_otp_login(number)
             return False
         else:
-            UserRepository.insert_user_not_verified(number)
+            UserRepo.insert_user_not_verified(number)
             self.otp.generate_otp_login(number)
             return False
 
@@ -52,8 +59,9 @@ class UserServices:
             # todo:raise otp incorrect | add otp incorrect in redis
             raise OTPInvalid
         self.otp.expire_otp(key_otp)
-        account = self.user_repo.verify_number(number=number)
-        return account
+        user = UserRepo.verify_number(number=number)
+        tokens = self.get_tokens(user)
+        return tokens
 
 
 class OTPServices:

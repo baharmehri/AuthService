@@ -1,5 +1,6 @@
 from rest_framework.response import Response
-from rest_framework import permissions, status, views
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 from apps.base.views import BaseView
 from apps.core.exceptions import NumberInvalid, UserPassInvalid, OTPInvalid
@@ -13,7 +14,7 @@ class NumberStatusView(BaseView):
         serializer = NumberStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            number_status = self.user_services.check_number_status(serializer.validated_data.get("number"))
+            number_status = self.user_service.check_number_status(serializer.validated_data.get("number"))
         except Exception:
             return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         data = {
@@ -31,7 +32,7 @@ class LoginView(BaseView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            tokens = self.user_services.login_user(
+            tokens = self.user_service.login_user(
                 serializer.validated_data.get("number"),
                 serializer.validated_data.get("password")
             )
@@ -50,8 +51,15 @@ class VerifyNumberView(BaseView):
         serializer = VerifyNumberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            user = self.user_services.verify_number(number=serializer.validated_data["number"],
-                                             code=serializer.validated_data["code"])
+            tokens = self.user_service.verify_number(number=serializer.validated_data["number"],
+                                                     code=serializer.validated_data["code"])
         except OTPInvalid as e:
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(UserOutputModelSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
+        return Response(tokens, status=status.HTTP_200_OK)
+
+
+class NewPasswordView(BaseView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        pass
