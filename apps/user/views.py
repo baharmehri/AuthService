@@ -1,18 +1,20 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status, views
 
+from apps.base.base_view import BaseView
 from apps.core.exceptions import NumberInvalid, UserPassInvalid
 from apps.user.serializers import LoginSerializer, NumberStatusSerializer
-from apps.services.user_services import UserServices
 
 
-class NumberStatusView(APIView):
+class NumberStatusView(BaseView):
 
     def post(self, request):
-        serializer = NumberStatusSerializer.InputSerializer(data=request.data)
+        serializer = NumberStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        number_status = UserServices().check_number_status(serializer.validated_data.get("number"))
+        try:
+            number_status = self.user_services.check_number_status(serializer.validated_data.get("number"))
+        except Exception:
+            return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         data = {
             "number": serializer.validated_data.get("number"),
             "status": number_status
@@ -22,12 +24,13 @@ class NumberStatusView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class LoginView(APIView):
+class LoginView(BaseView):
+
     def post(self, request):
-        serializer = LoginSerializer.InputLoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            tokens = UserServices().login_user(
+            tokens = self.user_services.login_user(
                 serializer.validated_data.get("number"),
                 serializer.validated_data.get("password")
             )
@@ -35,7 +38,7 @@ class LoginView(APIView):
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except UserPassInvalid as e:
             return Response({"error": e.message}, status=status.HTTP_401_UNAUTHORIZED)
-        except Exception as e:
-            return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(tokens, status=status.HTTP_200_OK)

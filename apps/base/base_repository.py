@@ -1,7 +1,4 @@
-import abc
-from abc import ABC
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
 
 
 class BaseRepository:
