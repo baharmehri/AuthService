@@ -1,5 +1,5 @@
 from apps.user.models import CustomUser
-from apps.base.base_repository import BaseRepository
+from apps.base.repositories import BaseRepository
 
 
 class UserRepository(BaseRepository):

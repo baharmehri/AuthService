@@ -1,9 +1,9 @@
 from rest_framework.response import Response
 from rest_framework import permissions, status, views
 
-from apps.base.base_view import BaseView
+from apps.base.views import BaseView
 from apps.core.exceptions import NumberInvalid, UserPassInvalid
-from apps.user.serializers import LoginSerializer, NumberStatusSerializer
+from apps.user.serializers import LoginSerializer, NumberStatusSerializer, VerifyNumberSerializer
 
 
 class NumberStatusView(BaseView):
@@ -42,3 +42,12 @@ class LoginView(BaseView):
             return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(tokens, status=status.HTTP_200_OK)
+
+
+class VerifyNumberView(BaseView):
+    def post(self, request):
+        serializer = VerifyNumberSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.user_services.verify_number(number=serializer.validated_data["number"],
+                                         code=serializer.validated_data["code"])
+        return Response({}, status=status.HTTP_200_OK)

@@ -1,23 +1,16 @@
 import random
+import datetime
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from apps.utils.redis import get_redis_connection
 from apps.repositories.user_repositories import UserRepository
 from apps.core.exceptions import UserPassInvalid, NumberInvalid
+from apps.user.redis import OTPRedis
 
 
 class UserServices:
     def __init__(self):
         self.otp = OTPServices()
         self.user_repo = UserRepository()
-
-    def login_service(self, number):
-        user = UserRepository.check_user_exists(number)
-        if user and user.is_active:
-            # todo:get password
-            return
-        else:
-            self.otp.generate_otp_login(number)
 
     @staticmethod
     def user_authentication(number, password):
@@ -50,12 +43,23 @@ class UserServices:
             self.otp.generate_otp_login(number)
             return False
 
+    def verify_number(self, number, code):
+        otp = self.otp.get_otp(f'{number}_otp')
+        if otp is None:
+            raise  # todo:handle exception
+
+        print(otp)
+
 
 class OTPServices:
     def __init__(self):
-        self.redis_connection = get_redis_connection()
+        self.redis = OTPRedis()
 
     def generate_otp_login(self, number):
         code = random.randint(100000, 999999)
-        self.redis_connection.set(f'{number}_otp', code, ex=60 * 2)
+        self.redis.insert(key=f'{number}_otp', expire_datetime=datetime.timedelta(minutes=2), value=code)
         return
+
+    def get_otp(self, key):
+        code = self.redis.get_key(key)
+        return code
