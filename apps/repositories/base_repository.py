@@ -1,31 +1,38 @@
 import abc
 from abc import ABC
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 
-class BaseRepositoryInterface(ABC):
+class BaseRepository:
+    model = None
 
-    @abc.abstractmethod
-    def _get_all(self) -> models.QuerySet:
-        pass
+    @classmethod
+    def get(cls, pk):
+        try:
+            return cls.model.objects.get(pk=pk)
+        except ObjectDoesNotExist:
+            return None
 
-    @abc.abstractmethod
-    def _get_by_id(self, id: int | str) -> models.Model:
-        pass
+    @classmethod
+    def create(cls, **kwargs):
+        return cls.model.objects.create(**kwargs)
 
+    @classmethod
+    def update(cls, instance, **kwargs):
+        for key, value in kwargs.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
 
-class BaseRepository(BaseRepositoryInterface):
-    __slots__ = (
-        "_model"
-    )
+    @classmethod
+    def delete(cls, instance):
+        instance.delete()
 
-    def __init__(self, model: models.Model):
-        self._model = model
+    @classmethod
+    def all(cls):
+        return cls.model.objects.all()
 
-    def _get_all(self):
-        return self._model.objects.all()
-
-    def _get_by_id(self, id: int | str):
-        item = self._model.objects.get(pk=id)
-        return item
+    @classmethod
+    def get_by_filter(cls, **filters):
+        return cls.model.objects.filter(**filters)

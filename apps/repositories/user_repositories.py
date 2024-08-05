@@ -1,11 +1,15 @@
 from apps.user.models import CustomUser
+from apps.repositories.base_repository import BaseRepository
 
 
-class UserRepository:
-    @staticmethod
-    def check_user_exists(number):
-        return CustomUser.objects.filter(number=number).first()
+class UserRepository(BaseRepository):
+    model = CustomUser
 
-    @staticmethod
-    def insert_user_not_verified(number):
-        return CustomUser.objects.create_user(number)
+    @classmethod
+    def check_user_exists(cls, number):
+        user = cls.get_by_filter(number=number).first()
+        return user
+
+    @classmethod
+    def insert_user_not_verified(cls, number):
+        return cls.model.objects.create_user(number=number)

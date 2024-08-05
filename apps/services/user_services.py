@@ -9,6 +9,7 @@ from apps.core.exceptions import UserPassInvalid, NumberInvalid
 class UserServices:
     def __init__(self):
         self.otp = OTPServices()
+        self.user_repo = UserRepository()
 
     def login_service(self, number):
         user = UserRepository.check_user_exists(number)
@@ -23,7 +24,7 @@ class UserServices:
         return authenticate(number=number, password=password)
 
     def login_user(self, number, password):
-        user = UserRepository.check_user_exists(number)
+        user = self.user_repo.check_user_exists(number)
         if user is None:
             raise NumberInvalid
         user = self.user_authentication(number, password)
@@ -38,10 +39,10 @@ class UserServices:
             raise UserPassInvalid
 
     def check_number_status(self, number):
-        user = UserRepository.check_user_exists(number)
-        if user and user.verified:
+        user = self.user_repo.check_user_exists(number)
+        if user and user.is_verified:
             return True
-        elif user and user.verified is False:
+        elif user and user.is_verified is False:
             self.otp.generate_otp_login(number)
             return False
         else:

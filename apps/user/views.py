@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status, views
+
+from apps.core.exceptions import NumberInvalid, UserPassInvalid
 from apps.user.serializers import LoginSerializer, NumberStatusSerializer
 from apps.services.user_services import UserServices
 
@@ -29,6 +31,10 @@ class LoginView(APIView):
                 serializer.validated_data.get("number"),
                 serializer.validated_data.get("password")
             )
+        except NumberInvalid as e:
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except UserPassInvalid as e:
+            return Response({"error": e.message}, status=status.HTTP_401_UNAUTHORIZED)
         except Exception as e:
             return Response({"error": e}, status=status.HTTP_400_BAD_REQUEST)
 

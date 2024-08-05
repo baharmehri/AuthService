@@ -3,8 +3,6 @@ from django.contrib.auth.models import AbstractUser
 from .manager import CustomUserManager
 
 
-# Create your models here.
-
 class CustomUser(AbstractUser):
     number = models.CharField(unique=True, max_length=11)
     is_admin = models.BooleanField(default=False)
