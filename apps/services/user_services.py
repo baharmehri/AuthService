@@ -3,7 +3,7 @@ import datetime
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.repositories.user_repositories import UserRepository
-from apps.core.exceptions import UserPassInvalid, NumberInvalid
+from apps.core.exceptions import UserPassInvalid, NumberInvalid, OTPInvalid
 from apps.user.redis import OTPRedis
 
 
@@ -44,11 +44,16 @@ class UserServices:
             return False
 
     def verify_number(self, number, code):
-        otp = self.otp.get_otp(f'{number}_otp')
+        key_otp = f'{number}_otp'
+        otp = self.otp.get_otp(key_otp)
         if otp is None:
             raise  # todo:handle exception
-
-        print(otp)
+        if int(code) != int(otp):
+            # todo:raise otp incorrect | add otp incorrect in redis
+            raise OTPInvalid
+        self.otp.expire_otp(key_otp)
+        account = self.user_repo.verify_number(number=number)
+        return account
 
 
 class OTPServices:
@@ -58,8 +63,12 @@ class OTPServices:
     def generate_otp_login(self, number):
         code = random.randint(100000, 999999)
         self.redis.insert(key=f'{number}_otp', expire_datetime=datetime.timedelta(minutes=2), value=code)
+        print(code)
         return
 
     def get_otp(self, key):
         code = self.redis.get_key(key)
         return code
+
+    def expire_otp(self, key):
+        return self.redis.remove_key(key)

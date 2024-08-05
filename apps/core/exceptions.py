@@ -13,3 +13,10 @@ class NumberInvalid(Exception):
         self.message = message
         super().__init__(self.message)
         self.http_code = 404
+
+
+class OTPInvalid(Exception):
+    def __init__(self, message="Invalid OTP code."):
+        self.message = message
+        super().__init__(self.message)
+        self.http_code = 404

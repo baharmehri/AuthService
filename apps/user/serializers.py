@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.core.serializer_fields import PhoneNumberField
+from apps.user.models import CustomUser
 
 
 class LoginSerializer(serializers.Serializer):
@@ -14,3 +15,9 @@ class NumberStatusSerializer(serializers.Serializer):
 class VerifyNumberSerializer(serializers.Serializer):
     number = PhoneNumberField(required=True)
     code = serializers.CharField(max_length=6, min_length=6, required=True)
+
+
+class UserOutputModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'number', 'first_name', 'last_name', 'email', 'is_active', 'is_verified')

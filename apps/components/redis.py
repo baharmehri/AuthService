@@ -1,3 +1,4 @@
+import redis
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -19,7 +20,7 @@ class RedisConnection:
         port = os.environ.get('REDIS_PORT')
         username = os.environ.get('REDIS_USERNAME')
         password = os.environ.get('REDIS_PASSWORD')
-        self.connection = Redis(host=host, port=port, username=username, password=password, db=db)
+        self.connection = redis.Redis(host=host, port=port, username=username, password=password, db=db)
 
 
 class Redis:
@@ -36,3 +37,6 @@ class Redis:
 
     def get_key(self, key):
         return self.redis.get(key)
+
+    def remove_key(self, key):
+        return self.redis.delete(key)

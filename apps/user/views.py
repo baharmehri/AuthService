@@ -2,8 +2,9 @@ from rest_framework.response import Response
 from rest_framework import permissions, status, views
 
 from apps.base.views import BaseView
-from apps.core.exceptions import NumberInvalid, UserPassInvalid
-from apps.user.serializers import LoginSerializer, NumberStatusSerializer, VerifyNumberSerializer
+from apps.core.exceptions import NumberInvalid, UserPassInvalid, OTPInvalid
+from apps.user.serializers import LoginSerializer, NumberStatusSerializer, VerifyNumberSerializer, \
+    UserOutputModelSerializer
 
 
 class NumberStatusView(BaseView):
@@ -48,6 +49,9 @@ class VerifyNumberView(BaseView):
     def post(self, request):
         serializer = VerifyNumberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.user_services.verify_number(number=serializer.validated_data["number"],
-                                         code=serializer.validated_data["code"])
-        return Response({}, status=status.HTTP_200_OK)
+        try:
+            user = self.user_services.verify_number(number=serializer.validated_data["number"],
+                                             code=serializer.validated_data["code"])
+        except OTPInvalid as e:
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(UserOutputModelSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
