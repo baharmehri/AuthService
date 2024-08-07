@@ -20,3 +20,11 @@ class OTPInvalid(Exception):
         self.message = message
         super().__init__(self.message)
         self.http_code = 404
+
+
+class ReachedLimit(Exception):
+    def __init__(self, message="User has reached the limit."):
+        self.message = message
+        super().__init__(self.message)
+        self.http_code = 404
+

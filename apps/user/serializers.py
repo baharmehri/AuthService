@@ -27,16 +27,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['email', 'first_name', 'last_name']
 
-    def create(self, validated_data):
-        user = self.context['request'].user
-        profile = UserRepository.update(
-            user,
-            email=validated_data.get('email'),
-            first_name=validated_data.get('first_name'),
-            last_name=validated_data.get('last_name')
-        )
-        return profile
-
 
 class UserOutputModelSerializer(serializers.ModelSerializer):
     class Meta:

@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from apps.base.views import BaseView
-from apps.core.exceptions import NumberInvalid, UserPassInvalid, OTPInvalid
+from apps.core.exceptions import NumberInvalid, UserPassInvalid, OTPInvalid, ReachedLimit
 from apps.core.permissions import IsAuthenticatedToSetPassword, IsAuthenticatedUser
 from apps.user.serializers import LoginSerializer, NumberStatusSerializer, VerifyNumberSerializer, \
     SetPasswordSerializer, UserProfileSerializer
@@ -33,11 +33,13 @@ class LoginView(BaseView):
         serializer.is_valid(raise_exception=True)
         try:
             tokens = self.user_service.login_user(
-                serializer.validated_data.get("number"),
-                serializer.validated_data.get("password")
+                serializer.validated_data,
+                request.META['REMOTE_ADDR']
             )
         except NumberInvalid as e:
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except ReachedLimit as e:
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except UserPassInvalid as e:
             return Response({"error": e.message}, status=status.HTTP_401_UNAUTHORIZED)
         except Exception:
@@ -77,7 +79,12 @@ class UpdateProfileView(BaseView):
 
     def post(self, request):
         serializer = UserProfileSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            profile = serializer.save()
-            return Response(UserProfileSerializer(profile).data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        try:
+            profile = self.user_service.update_profile(
+                request.user,
+                serializer.validated_data
+            )
+        except Exception:
+            return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(UserProfileSerializer(profile).data, status=status.HTTP_200_OK)

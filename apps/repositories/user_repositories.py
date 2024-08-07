@@ -1,4 +1,6 @@
-from apps.user.models import CustomUser
+import datetime
+
+from apps.user.models import CustomUser, BannedIP
 from apps.base.repositories import BaseRepository
 
 
@@ -26,3 +28,16 @@ class UserRepository(BaseRepository):
         user = cls.get_by_filter(id=user_id).set_password(password)
         user.save()
         return
+
+    @classmethod
+    def ban_user(cls, user: CustomUser, ban_minute: int):
+        banned_until = datetime.datetime.utcnow() + datetime.timedelta(minutes=ban_minute)
+        user = cls.update(user, banned_until=banned_until)
+        user.save()
+        return
+
+
+class BannedIPRepository(BaseRepository):
+    model = BannedIP
+
+

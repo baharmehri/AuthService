@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .manager import CustomUserManager
@@ -17,3 +19,12 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.number
+
+
+class BannedIP(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    ip = models.CharField(max_length=255)
+    banned_until = models.DateTimeField(default=datetime.datetime.now() + datetime.timedelta(minutes=60))
+
+    class Meta:
+        unique_together = ('user', 'ip')
