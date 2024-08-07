@@ -8,6 +8,7 @@ class CustomUser(AbstractUser):
     username = models.CharField(max_length=255, null=True)
     is_admin = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    banned_until = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'number'
 
