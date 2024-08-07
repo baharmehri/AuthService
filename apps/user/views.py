@@ -3,9 +3,9 @@ from rest_framework import status
 
 from apps.base.views import BaseView
 from apps.core.exceptions import NumberInvalid, UserPassInvalid, OTPInvalid
-from apps.core.permissions import IsAuthenticatedToSetPassword
+from apps.core.permissions import IsAuthenticatedToSetPassword, IsAuthenticatedUser
 from apps.user.serializers import LoginSerializer, NumberStatusSerializer, VerifyNumberSerializer, \
-    SetPasswordSerializer
+    SetPasswordSerializer, UserProfileSerializer
 
 
 class NumberStatusView(BaseView):
@@ -70,3 +70,14 @@ class NewPasswordView(BaseView):
             return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"message": "Password has been set successfully."}, status=status.HTTP_200_OK)
+
+
+class UpdateProfileView(BaseView):
+    permission_classes = [IsAuthenticatedUser]
+
+    def post(self, request):
+        serializer = UserProfileSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            profile = serializer.save()
+            return Response(UserProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
