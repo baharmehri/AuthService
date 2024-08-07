@@ -17,6 +17,10 @@ class VerifyNumberSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6, min_length=6, required=True)
 
 
+class SetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True)
+
+
 class UserOutputModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser

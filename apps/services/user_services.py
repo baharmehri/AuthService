@@ -63,6 +63,10 @@ class UserServices:
         tokens = self.get_tokens(user)
         return tokens
 
+    def set_password_for_new_user(self, user, password):
+        UserRepo.set_password(user.id, password)
+        return
+
 
 class OTPServices:
     def __init__(self):
