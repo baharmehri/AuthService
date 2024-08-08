@@ -11,3 +11,4 @@ python-dotenv
 drf_spectacular
 redis
 django-redis
+kavenegar

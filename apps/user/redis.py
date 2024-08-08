@@ -1,5 +1,5 @@
 from apps.components.redis import Redis
 
 
-class OTPRedis(Redis):
+class CacheRedis(Redis):
     _db_number = 0
