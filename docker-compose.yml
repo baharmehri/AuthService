@@ -33,18 +33,6 @@ services:
     networks:
       - login_network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    ports:
-      - '8080:80'
-    env_file:
-      - .env
-    depends_on:
-      - db
-    networks:
-      - login_network
-
   redis:
     image: redis:latest
     container_name: redis
