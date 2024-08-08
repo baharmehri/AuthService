@@ -1,5 +1,8 @@
 import random
 import datetime
+import pytz
+
+from django.utils import timezone
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -32,8 +35,16 @@ class UserServices:
 
     @staticmethod
     def is_user_reached_limit(user: CustomUser) -> bool:
-        now = datetime.datetime.utcnow()
-        if user.banned_until is None or user.banned_until >= now:
+        now = timezone.now().astimezone(pytz.UTC)
+        if not user.banned_until or user.banned_until >= now:
+            return False
+        return True
+
+    @staticmethod
+    def is_ip_reached_limit(user: CustomUser, ip) -> bool:
+        now = timezone.now().astimezone(pytz.UTC)
+        banned_ip = BannedIPRepo.get_by_filter(user=user, ip=ip).first()
+        if not banned_ip or banned_ip.banned_until >= now:
             return False
         return True
 
@@ -49,6 +60,9 @@ class UserServices:
         self.cache.insert_cache(f'{item}_attempt', try_count + 1, 60)
 
     def check_reached_limit(self, user: CustomUser, ip):
+        if self.is_ip_reached_limit(user, ip):
+            raise ReachedLimit()
+
         if self.is_user_reached_limit(user):
             raise ReachedLimit()
 
@@ -92,13 +106,20 @@ class UserServices:
             self.generate_otp(number)
             return False
 
-    def verify_number(self, number, code):
+    def verify_number(self, validated_data, ip):
+        number = validated_data["number"]
+        code = validated_data["code"]
+        user = UserRepo.check_user_exists(number)
+        if user is None:
+            raise NumberInvalid()
+        self.check_reached_limit(user, ip)
         key_otp = f'{number}_otp'
         otp = self.cache.get_value(key_otp)
         if otp is None:
             raise OTPInvalid
         if int(code) != int(otp):
-            # todo:raise otp incorrect | add otp incorrect in redis
+            self.update_limit_count(number)
+            self.update_limit_count(f'{user.id}_{ip}')
             raise OTPInvalid
         self.cache.expire_otp(key_otp)
         user = UserRepo.verify_number(number=number)

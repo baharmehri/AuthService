@@ -1,7 +1,10 @@
 import datetime
+import pytz
 
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
 from .manager import CustomUserManager
 
 
@@ -24,7 +27,7 @@ class CustomUser(AbstractUser):
 class BannedIP(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     ip = models.CharField(max_length=255)
-    banned_until = models.DateTimeField(default=datetime.datetime.now() + datetime.timedelta(minutes=60))
+    banned_until = models.DateTimeField(default=timezone.now().astimezone(pytz.UTC) + datetime.timedelta(minutes=60))
 
     class Meta:
         unique_together = ('user', 'ip')

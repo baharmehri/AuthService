@@ -53,10 +53,19 @@ class VerifyNumberView(BaseView):
         serializer = VerifyNumberSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            tokens = self.user_service.verify_number(number=serializer.validated_data["number"],
-                                                     code=serializer.validated_data["code"])
+            tokens = self.user_service.verify_number(
+                validated_data=serializer.validated_data,
+                ip=request.META['REMOTE_ADDR']
+            )
+        except NumberInvalid as e:
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except ReachedLimit as e:
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except OTPInvalid as e:
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({"error": "An internal error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         return Response(tokens, status=status.HTTP_200_OK)
 
 

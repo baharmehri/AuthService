@@ -1,3 +1,4 @@
+pytz
 setuptools
 keyring
 Django
