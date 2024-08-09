@@ -165,6 +165,7 @@ class OTPService(ABC):
         code = random.randint(100000, 999999)
         return code
 
+    @abstractmethod
     def verify_otp(self, *args, **kwargs):
         pass
 
