@@ -14,4 +14,3 @@ django-celery-results==2.5.1
 django_celery_beat==2.6.0
 flower==1.2.0
 kavenegar
-pytz

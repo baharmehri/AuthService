@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from apps.services.user_services import UserServices
+from apps.user.services import UserServices
 
 
 class BaseView(APIView):

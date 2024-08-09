@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from apps.core.serializer_fields import PhoneNumberField
 from apps.user.models import CustomUser
-from apps.repositories.user_repositories import UserRepository
 
 
 class LoginSerializer(serializers.Serializer):
