@@ -2,14 +2,14 @@ import os
 import random
 import datetime
 import pytz
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from kavenegar import KavenegarAPI, APIException, HTTPException
 
-from apps.repositories.user_repositories import UserRepository as UserRepo, BannedIPRepository as BannedIPRepo
+from apps.user.repositories import UserRepository as UserRepo, BannedIPRepository as BannedIPRepo
 from apps.core.exceptions import UserPassInvalid, NumberInvalid, OTPInvalid, ReachedLimit
 from apps.user.redis import CacheRedis
 from apps.user.models import CustomUser
@@ -165,7 +165,7 @@ class OTPService(ABC):
         code = random.randint(100000, 999999)
         return code
 
-    @abstractmethod
+    # @abstractmethod
     def verify_otp(self, *args, **kwargs):
         pass
 

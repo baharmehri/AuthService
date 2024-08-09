@@ -22,6 +22,8 @@ services:
       sh -c "python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
+    container_name: django
+    restart: always
     volumes:
       - .:/code
     ports:
@@ -42,6 +44,77 @@ services:
     volumes:
       - db_data_2:/data
     command: redis-server --appendonly yes
+    env_file:
+      - .env
+    networks:
+      - login_network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbit
+    restart: always
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    env_file:
+      - .env
+    networks:
+      - login_network
+
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: celery -A config worker --loglevel=info
+    container_name: celery-worker
+    restart: always
+    volumes:
+      - db_data_2:/celery/worker
+    env_file:
+      - .env
+    depends_on:
+      - django
+      - rabbitmq
+    networks:
+      - login_network
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: celery -A config beat --loglevel=info
+    container_name: celery-beat
+    restart: always
+    volumes:
+      - db_data_2:/celery/beat
+    env_file:
+      - .env
+    depends_on:
+      - django
+      - rabbitmq
+    networks:
+      - login_network
+
+  flower:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: celery -A config flower
+    container_name: flower
+    restart: always
+    volumes:
+      - db_data_2:/flower
+    ports:
+      - '5555:5555'
+    env_file:
+      - .env
+    depends_on:
+      - celery-worker
+      - rabbitmq
     networks:
       - login_network
 
