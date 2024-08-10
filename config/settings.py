@@ -131,7 +131,7 @@ SIMPLE_JWT = {
 }
 # swagger
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Test API',
+    'TITLE': 'AuthService API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

@@ -1,4 +1,7 @@
 import datetime
+import pytz
+
+from django.utils import timezone
 
 from apps.user.models import CustomUser, BannedIP
 from apps.base.repositories import BaseRepository
@@ -25,13 +28,14 @@ class UserRepository(BaseRepository):
 
     @classmethod
     def set_password(cls, user_id, password):
-        user = cls.get_by_filter(id=user_id).set_password(password)
+        user = cls.get(user_id)
+        user.set_password(password)
         user.save()
         return
 
     @classmethod
     def ban_user(cls, user: CustomUser, ban_minute: int):
-        banned_until = datetime.datetime.utcnow() + datetime.timedelta(minutes=ban_minute)
+        banned_until = timezone.now().astimezone(pytz.UTC) + datetime.timedelta(minutes=ban_minute)
         user = cls.update(user, banned_until=banned_until)
         user.save()
         return
@@ -39,5 +43,3 @@ class UserRepository(BaseRepository):
 
 class BannedIPRepository(BaseRepository):
     model = BannedIP
-
-
